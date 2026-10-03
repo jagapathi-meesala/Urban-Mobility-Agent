@@ -1,199 +1,193 @@
 # Explainability
 
-## Inputs
+## Inputs and Data Sources
 
-The agent accepts structured input supplied by the caller. It does not retrieve live traffic, transit, GPS, map, or external mobility data.
+The Urban Mobility Agent accepts only structured information explicitly supplied by the caller.
 
 ### Input Requirements
 
-All inputs must match the corresponding tool schema.
-
-The agent uses only values explicitly supplied by the caller. Missing values are not invented or inferred.
+The agent validates required fields, data types, numeric constraints, and unexpected fields before executing a tool.
 
 ### Data Sources
 
-The data source is the caller-provided structured input. No external data source is required for the core implementation.
+The core implementation uses caller-provided mobility, traffic, and trip-option data. It does not silently retrieve external traffic, GPS, mapping, transit, or location data.
 
-### Validation
+### Failure Handling
 
-Inputs are validated for required fields, supported types, valid ranges, and unexpected fields before processing.
+Invalid or incomplete input is rejected with a structured validation error. Missing information is not fabricated or inferred.
 
-## Decision
+## Decision and Reasoning
 
-The agent makes deterministic decisions using explicit calculations and rule-based logic.
+All core decisions are deterministic and based only on validated input values.
 
-### analyze-mobility-status
+### Rules Applied
 
-The tool evaluates supplied mobility mode, availability, delay, and occupancy information.
-
-Decision factors:
+`analyze-mobility-status` evaluates:
+- mobility mode
 - availability
-- delay in minutes
-- occupancy percentage
-- supplied mobility mode
+- delay
+- occupancy
 
-The resulting status is derived only from the supplied values.
-
-### analyze-traffic-conditions
-
-The tool evaluates supplied traffic conditions.
-
-Decision factors:
+`analyze-traffic-conditions` evaluates:
 - average speed
 - reference speed
-- supplied incident information
+- incident count
 
-The tool calculates a speed ratio and incident impact and derives a traffic condition from those values.
+`plan-mobility-option` evaluates:
+- supplied mobility options
+- supplied weights
+- normalized time
+- normalized cost
+- normalized congestion
 
-### plan-mobility-option
+### Expected Outputs
 
-The tool compares caller-provided mobility options.
+The tools return structured classifications, calculations, or comparisons derived from the supplied input.
 
-Decision factors:
-- travel time
-- cost
-- congestion
-- caller-supplied weights
+### Explainability
 
-The tool normalizes the supplied values and calculates a deterministic weighted score.
+Each result can be traced to the input values and deterministic rules used by the corresponding tool.
 
 ### Determinism
 
-Identical valid inputs produce the same result. No random values, hidden external services, or live data are used.
+The same valid input produces the same output. No random values or hidden external services are used.
 
-## Limits
+## Limits and Constraints
 
-- The agent does not provide live traffic information.
-- The agent does not access GPS positioning.
-- The agent does not query mapping services.
-- The agent does not query public-transit APIs.
-- The agent does not generate real-world routes from external map data.
-- The agent does not infer missing measurements.
-- The agent does not fabricate traffic, transit, or mobility conditions.
-- Analytical scores depend entirely on the supplied input values.
-- Results should not be interpreted as real-time observations unless real-time measurements are explicitly supplied by the caller.
-- The agent does not guarantee travel time, traffic conditions, availability, or route feasibility in the real world.
+The agent does not provide live traffic information, live public-transit availability, GPS positioning, external map routes, or independently verified transportation data.
 
-## Failure Handling
+### Constraints
 
-Invalid requests are rejected instead of being silently corrected.
+Results depend on the quality and completeness of caller-provided data.
 
-Failures include:
-- missing required fields
-- invalid data types
-- values outside supported ranges
-- malformed mobility options
-- invalid weights
-- empty option lists
-- unexpected input fields
+### Known Issues
 
-Errors identify the invalid input condition without fabricating a replacement value.
+Rule-based classifications may not represent rapidly changing real-world transportation conditions.
+
+### Unsupported Behavior
+
+The agent does not:
+- fabricate traffic measurements
+- fabricate transit availability
+- invent routes
+- invent travel times
+- invent costs
+- invent congestion values
+- control vehicles
+- control traffic signals
+- control transportation infrastructure
 
 ## Tool Documentation
 
-### analyze-mobility-status
+## analyze-mobility-status
 
-#### Inputs
-
-Required:
-- mode
-- availability
-- delay_minutes
-- occupancy_percent
-
-#### Decision
-
-The tool evaluates availability, delay, and occupancy using deterministic rule-based logic and returns a mobility status with supporting information.
-
-#### Outputs
-
-The result contains the derived mobility status and relevant calculated values.
-
-#### Failure Handling
-
-The tool rejects missing, invalid, or unexpected fields.
-
-#### Limits
-
-The result represents only the supplied mobility measurements and does not represent live mobility conditions.
-
----
-
-### analyze-traffic-conditions
-
-#### Inputs
+### Inputs
 
 Required:
-- average_speed_kmh
-- reference_speed_kmh
-- incidents
+- `mode`
+- `availability`
+- `delay_minutes`
+- `occupancy_percent`
 
-#### Decision
+### Data Sources
 
-The tool calculates the relationship between average speed and reference speed and considers the supplied incident information to derive a traffic condition.
+All values are supplied by the caller.
 
-#### Outputs
+### Decision
 
-The result contains the calculated traffic indicators and derived traffic condition.
+The tool evaluates availability, delay, occupancy, and mobility mode using deterministic rules.
 
-#### Failure Handling
+### Outputs
 
-The tool rejects invalid values, non-positive reference speed, malformed incident data, and unexpected fields.
+Returns a structured mobility-status assessment and supporting values.
 
-#### Limits
+### Failure Handling
 
-The tool does not obtain traffic conditions from external services and cannot verify whether supplied traffic measurements are current.
+Rejects missing fields, invalid types, invalid numeric values, and unexpected fields.
 
----
+### Limits
 
-### plan-mobility-option
+The result describes only the supplied mobility measurements and is not a live observation.
 
-#### Inputs
+## analyze-traffic-conditions
+
+### Inputs
 
 Required:
-- options
-- weights
+- `average_speed_kmh`
+- `reference_speed_kmh`
+- `incidents`
 
-Each option contains caller-supplied mobility attributes used for comparison.
+### Data Sources
 
-#### Decision
+All traffic indicators are supplied by the caller.
 
-The tool normalizes the supplied option values and calculates a deterministic weighted score using the supplied weights.
+### Decision
 
-#### Outputs
+The tool compares average speed with reference speed and considers the supplied incident count.
 
-The result contains the evaluated mobility options and their calculated comparison scores.
+### Outputs
 
-#### Failure Handling
+Returns calculated traffic indicators and the resulting traffic assessment.
 
-The tool rejects malformed options, invalid weights, missing required values, empty option lists, and unexpected fields.
+### Failure Handling
 
-#### Limits
+Rejects missing fields, invalid types, invalid speed values, and unexpected fields.
 
-The comparison is limited to the options and values supplied by the caller. It does not discover additional transportation options or verify real-world availability.
+### Limits
+
+The tool cannot independently verify the freshness or accuracy of supplied traffic data.
+
+## plan-mobility-option
+
+### Inputs
+
+Required:
+- `options`
+- `weights`
+
+Each option contains caller-supplied mobility attributes.
+
+### Data Sources
+
+Only caller-provided options and weights are used.
+
+### Decision
+
+The tool normalizes supplied time, cost, and congestion values and calculates a deterministic weighted comparison.
+
+### Outputs
+
+Returns evaluated mobility options and their calculated comparison values.
+
+### Failure Handling
+
+Rejects missing fields, malformed option arrays, invalid weights, invalid option values, and unexpected fields.
+
+### Limits
+
+The tool compares only the options supplied by the caller. It does not discover or verify real-world transportation availability.
 
 ## Traceability
 
-Each decision can be traced to the input values and deterministic rules used by the corresponding tool.
-
-The agent does not use hidden external data for its core decisions.
+Every result is derived from explicit input values and deterministic processing rules.
 
 ## Transparency
 
 The agent distinguishes between:
-1. caller-provided measurements,
-2. calculated values,
-3. rule-based classifications, and
-4. limitations of the analysis.
+1. caller-provided inputs
+2. calculated values
+3. rule-based classifications
+4. documented limitations
 
-It does not present calculated results as independently verified real-world observations.
+The agent does not claim to have collected external evidence when no external source was used.
 
 ## Reproducibility
 
-A tool invocation with the same valid inputs produces the same output. This allows results to be reproduced and tested without external services.
+Core tool execution is deterministic and reproducible with identical valid inputs.
 
 ## Safety and Scope
 
-The agent is an analytical mobility-support system. It does not autonomously control traffic infrastructure, vehicles, signals, or transportation systems.
+The agent provides analytical mobility support only. It does not autonomously operate vehicles, traffic signals, or transportation infrastructure.
 
-Human operators remain responsible for interpreting analytical results and making operational decisions.
+Human operators remain responsible for interpreting the results and making operational decisions.
