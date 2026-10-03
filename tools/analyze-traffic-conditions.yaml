@@ -1,0 +1,10 @@
+name: analyze-traffic-conditions
+description: Analyze supplied traffic speed and incident indicators.
+input_schema:
+  type: object
+  properties:
+    average_speed_kmh: {type: number}
+    reference_speed_kmh: {type: number}
+    incidents: {type: number}
+  required: [average_speed_kmh, reference_speed_kmh, incidents]
+  additionalProperties: false

@@ -1,0 +1,22 @@
+spec_version: "0.1.0"
+name: urban-mobility-agent
+version: 1.0.0
+description: A framework-independent agent for analyzing supplied urban mobility data, traffic conditions, and trip options.
+author: Agent Passport Project
+license: MIT
+skills:
+  - mobility-monitoring
+  - traffic-analysis
+  - trip-planning
+tools:
+  - analyze-mobility-status
+  - analyze-traffic-conditions
+  - plan-mobility-option
+runtime:
+  max_turns: 20
+  timeout: 120
+tags:
+  - urban-mobility
+  - transportation
+  - traffic
+  - mobility

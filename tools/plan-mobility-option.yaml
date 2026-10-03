@@ -1,0 +1,13 @@
+name: plan-mobility-option
+description: Compare supplied urban mobility options using weighted normalized time, cost, and congestion values.
+input_schema:
+  type: object
+  properties:
+    options:
+      type: array
+      items:
+        type: object
+    weights:
+      type: object
+  required: [options, weights]
+  additionalProperties: false

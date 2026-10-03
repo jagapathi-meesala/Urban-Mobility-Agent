@@ -1,0 +1,11 @@
+name: analyze-mobility-status
+description: Analyze supplied urban mobility availability, delay, and occupancy indicators.
+input_schema:
+  type: object
+  properties:
+    mode: {type: string}
+    availability: {type: string}
+    delay_minutes: {type: number}
+    occupancy_percent: {type: number}
+  required: [mode, availability, delay_minutes, occupancy_percent]
+  additionalProperties: false
